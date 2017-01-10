@@ -28,7 +28,7 @@ Bot is ready, hit ^C to exit.
 
 ## A robot example application
 
-This sample application answers to the following command:
+This example application answers to the following command:
 
 * @yourbotname hello <name>: Renders "hello <name>!",
 
@@ -43,10 +43,9 @@ import (
 
 func main() {
 	slackbot.Token = "<your-bot-token>"
-
 	slackbot.Init()
 
-    slackbot.AddCommand("^hello (.*)", func(command Command, message Message) {
+    slackbot.AddCommand("^hello (.*)", func(command slackbot.Command, message slackbot.Message) {
 		name := command.Pattern.FindStringSubmatch(message.Text)[1]
 		message.Text = string(fmt.Sprintf("hello, %s!", name))
 
