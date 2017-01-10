@@ -38,7 +38,6 @@ package main
 import (
     "github.com/eko/slackbot"
     "fmt"
-	"os/exec"
 )
 
 func main() {
