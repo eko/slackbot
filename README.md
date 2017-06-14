@@ -48,9 +48,58 @@ func main() {
 		name := command.Pattern.FindStringSubmatch(message.Text)[1]
 		message.Text = string(fmt.Sprintf("hello, %s!", name))
 
-		slackbot.Send(message)
+		slackbot.Respond(message)
 	})
 
     slackbot.Stream()
+}
+```
+
+## A periodic (using robfig/cron) tasks for your bot
+
+For this demo, we are using `github.com/robfig/cron` library to run a task every minute.
+
+```go
+package main
+
+import (
+	"github.com/eko/slackbot"
+	"github.com/robfig/cron"
+
+	"./task"
+)
+
+const (
+	channel = "general"
+)
+
+var (
+	channelIdentifier string
+)
+
+func main() {
+	slackbot.Token = "your-amazing-token"
+
+	channelsResponse, _ := slackbot.ListChannels()
+
+	for i := 0; i < len(channelsResponse.Channels); i++ {
+		if channel == channelsResponse.Channels[i].Name {
+			channelIdentifier = channelsResponse.Channels[i].ID
+		}
+	}
+
+	c := cron.New()
+	c.AddFunc("1 * * * * *", func() {
+    message := slackbot.Message{
+  		AsUser:  true,
+  		Channel: channelIdentifier,
+  		Text:    "Hello you!",
+  	}
+
+  	slackbot.PostMessage(message)
+	})
+	c.Start()
+
+	select {}
 }
 ```

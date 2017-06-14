@@ -5,11 +5,14 @@
 package slackbot
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"golang.org/x/net/websocket"
@@ -23,21 +26,59 @@ var (
 	commands        []Command
 )
 
-type JsonResponse struct {
-	Ok   bool             `json:"ok"`
-	URL  string           `json:"url"`
-	Self JsonResponseSelf `json:"self"`
+type RtmJsonResponse struct {
+	Ok    bool                `json:"ok"`
+	Error string              `json:"error"`
+	URL   string              `json:"url"`
+	Self  RtmJsonResponseSelf `json:"self"`
 }
 
-type JsonResponseSelf struct {
+type RtmJsonResponseSelf struct {
 	ID string `json:"id"`
+}
+
+type Channel struct {
+	User     string `json:"user"`
+	Token    string `json:"token"`
+	ReturnIM bool   `json:"return_im"`
 }
 
 type Message struct {
 	ID      uint64 `json:"id"`
 	Type    string `json:"type"`
 	Channel string `json:"channel"`
+	AsUser  bool   `json:"as_user"`
 	Text    string `json:"text"`
+	Token   string `json:"token"`
+}
+
+type ChannelJsonResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type ChannelsJsonResponse struct {
+	Ok       bool                  `json:"ok"`
+	Error    string                `json:"error"`
+	Channels []ChannelJsonResponse `json:"channels"`
+}
+
+type IMJsonResponse struct {
+	Ok      bool                `json:"ok"`
+	Error   string              `json:"error"`
+	Channel ChannelJsonResponse `json:"channel"`
+}
+
+type UserJsonResponse struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	RealName string `json:"real_name"`
+}
+
+type UsersJsonResponse struct {
+	Ok      bool               `json:"ok"`
+	Error   string             `json:"error"`
+	Members []UserJsonResponse `json:"members"`
 }
 
 type handler func(pattern Command, message Message)
@@ -69,7 +110,7 @@ func Init() {
 	response.Body.Close()
 	check_error(err)
 
-	var jsonResponse JsonResponse
+	var jsonResponse RtmJsonResponse
 	err = json.Unmarshal(body, &jsonResponse)
 	check_error(err)
 
@@ -111,7 +152,96 @@ func AddCommand(pattern string, handler handler) {
 	commands = append(commands, Command{Pattern: regexp.MustCompile(pattern), Handler: handler})
 }
 
-// Send function sends a new message into the websocket stream.
-func Send(message Message) error {
+// Respond function sends a message back into the websocket stream.
+func Respond(message Message) error {
 	return websocket.JSON.Send(WebsocketStream, message)
+}
+
+// Opens an Instant Messaging window with a user
+func OpenIM(channel Channel) (IMJsonResponse, error) {
+	var jsonResponse IMJsonResponse
+
+	data := url.Values{}
+	data.Set("token", Token)
+	data.Add("user", channel.User)
+
+	url := "https://slack.com/api/im.open"
+
+	response, err := http.Post(url, "application/x-www-form-urlencoded", bytes.NewBufferString(data.Encode()))
+	check_error(err)
+
+	if response.StatusCode != 200 {
+		return jsonResponse, fmt.Errorf("Unable to open an instant message. Code status: %d", response.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(response.Body)
+	response.Body.Close()
+	check_error(err)
+
+	err = json.Unmarshal(body, &jsonResponse)
+	check_error(err)
+
+	fmt.Printf("%s", jsonResponse.Error)
+
+	return jsonResponse, nil
+}
+
+// Posts a message using the Slack API (not the Stream one).
+func PostMessage(message Message) {
+	data := url.Values{}
+	data.Set("token", Token)
+	data.Add("channel", message.Channel)
+	data.Add("text", message.Text)
+	data.Add("as_user", strconv.FormatBool(message.AsUser))
+
+	url := "https://slack.com/api/chat.postMessage"
+
+	_, err := http.Post(url, "application/x-www-form-urlencoded", bytes.NewBufferString(data.Encode()))
+	check_error(err)
+}
+
+// List channels
+func ListChannels() (ChannelsJsonResponse, error) {
+	var jsonResponse ChannelsJsonResponse
+
+	url := fmt.Sprintf("https://slack.com/api/channels.list?token=%s", Token)
+
+	response, err := http.Get(url)
+	check_error(err)
+
+	if response.StatusCode != 200 {
+		return jsonResponse, fmt.Errorf("Unable to retrieve channels list. Code status: %d", response.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(response.Body)
+	response.Body.Close()
+	check_error(err)
+
+	err = json.Unmarshal(body, &jsonResponse)
+	check_error(err)
+
+	return jsonResponse, nil
+}
+
+// List users
+func ListUsers() (UsersJsonResponse, error) {
+	var jsonResponse UsersJsonResponse
+
+	url := fmt.Sprintf("https://slack.com/api/users.list?token=%s", Token)
+
+	response, err := http.Get(url)
+	check_error(err)
+
+	if response.StatusCode != 200 {
+		return jsonResponse, fmt.Errorf("Unable to retrieve users list. Code status: %d", response.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(response.Body)
+	response.Body.Close()
+	check_error(err)
+
+	err = json.Unmarshal(body, &jsonResponse)
+	check_error(err)
+
+	return jsonResponse, nil
 }
