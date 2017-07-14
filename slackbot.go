@@ -165,10 +165,6 @@ func Stream() {
 						fmt.Printf("-> Command: %s\n", message.Text)
 						message.Text = generateHelpOutput()
 						Respond(message)
-					} else {
-						fmt.Printf("-> Urecognized Command: %s\n", message.Text)
-						message.Text = "I don't understand that command, you might try the `help` command instead."
-						Respond(message)
 					}
 				}
 			}(commands, message)
