@@ -161,17 +161,14 @@ func Stream() {
 					if m, _ := regexp.MatchString(command.Pattern.String(), message.Text); m {
 						fmt.Printf("-> Command: %s\n", message.Text)
 						command.Handler(command, message)
-						break
-					} else if m, _ := regexp.MatchString("^help$", message.Text); m {
+					} else if m, _ := regexp.MatchString("^help", message.Text); m {
 						fmt.Printf("-> Command: %s\n", message.Text)
 						message.Text = generateHelpOutput()
 						Respond(message)
-						break
 					} else {
 						fmt.Printf("-> Urecognized Command: %s\n", message.Text)
 						message.Text = "I don't understand that command, you might try the `help` command instead."
 						Respond(message)
-						break
 					}
 				}
 			}(commands, message)
