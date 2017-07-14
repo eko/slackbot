@@ -169,7 +169,7 @@ func Stream() {
 
 // AddCommand function adds a new command into the commands list.
 func AddCommand(pattern string, name string, description string, handler handler) {
-	commands = append(commands, Command{Pattern: regexp.MustCompile(pattern), Description: description, Handler: handler})
+	commands = append(commands, Command{Pattern: regexp.MustCompile(pattern), Name: name, Description: description, Handler: handler})
 }
 
 // Respond function sends a message back into the websocket stream.
