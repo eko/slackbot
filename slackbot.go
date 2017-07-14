@@ -156,6 +156,7 @@ func Stream() {
 
 		if message.Type == "message" && CheckPrefix(message, prefix) == true {
 			go func(commands []Command, message Message) {
+				message.Text = strings.Replace(message.Text, prefix, "", -1)
 				for _, command := range commands {
 					if m, _ := regexp.MatchString(command.Pattern.String(), message.Text); m {
 						fmt.Printf("-> Command: %s\n", message.Text)
