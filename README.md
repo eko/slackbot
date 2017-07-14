@@ -44,13 +44,14 @@ func main() {
 	slackbot.Token = "<your-bot-token>"
 	slackbot.Init()
 
-    slackbot.AddCommand("^hello (.*)", "hello", "Responds hello {string}", func(command slackbot.Command, message slackbot.Message) {
+    slackbot.AddCommand("^hello (.*)", "hello", "Responds hello {string}", 
+        func(command slackbot.Command, message slackbot.Message) {
 		name := command.Pattern.FindStringSubmatch(message.Text)[1]
 		message.Text = string(fmt.Sprintf("hello, %s!", name))
-
+		
 		slackbot.Respond(message)
 	})
-
+	
     slackbot.Stream()
 }
 ```
