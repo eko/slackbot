@@ -8,7 +8,7 @@ This is a Slack Robot written in Go.
 
 ## Robot creation
 
-1. Go on the following uri to declare your new bot: https://<team>.slack.com/services/new/bot
+1. Go on the following uri to declare your new bot: https://{team}.slack.com/services/new/bot
 
 2. Retrieve the given token.
 

@@ -84,14 +84,25 @@ type UsersJsonResponse struct {
 type handler func(pattern Command, message Message)
 
 type Command struct {
-	Pattern *regexp.Regexp
-	Handler handler
+	Pattern     *regexp.Regexp
+	Name        string
+	Description string
+	Handler     handler
 }
 
 func check_error(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// Returns a string containing a pretty list of commands using the Name and Description fields in the Command struct
+func generateHelpOutput() string {
+	helpString := ""
+	for _, command := range commands {
+		helpString = fmt.Sprintf("%s%s: %s", helpString, command.Name, command.Description)
+	}
+	return helpString
 }
 
 // Init function initializes the Slack websocket.
@@ -123,7 +134,6 @@ func Init() {
 // Stream function listens for the websocket for new messages.
 func Stream() {
 	fmt.Println("Bot is ready, hit ^C to exit.")
-
 	for {
 		var message Message
 		err := websocket.JSON.Receive(WebsocketStream, &message)
@@ -140,6 +150,16 @@ func Stream() {
 						fmt.Printf("-> Command: %s\n", message.Text)
 						command.Handler(command, message)
 						break
+					} else if m, _ := regexp.MatchString("^help$", message.Text); m {
+						fmt.Printf("-> Command: %s\n", message.Text)
+						message.Text = generateHelpOutput()
+						Respond(message)
+						break
+					} else {
+						fmt.Printf("-> Urecognized Command: %s\n", message.Text)
+						message.Text = "I don't understand that command, you might try the `help` command instead."
+						Respond(message)
+						break
 					}
 				}
 			}(commands, message)
@@ -148,8 +168,8 @@ func Stream() {
 }
 
 // AddCommand function adds a new command into the commands list.
-func AddCommand(pattern string, handler handler) {
-	commands = append(commands, Command{Pattern: regexp.MustCompile(pattern), Handler: handler})
+func AddCommand(pattern string, name string, description string, handler handler) {
+	commands = append(commands, Command{Pattern: regexp.MustCompile(pattern), Description: description, Handler: handler})
 }
 
 // Respond function sends a message back into the websocket stream.
