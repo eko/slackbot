@@ -30,3 +30,28 @@ func TestAddCommand(t *testing.T) {
 		t.Error("Should have 2 commands added")
 	}
 }
+
+func TestCheckPrefix(t *testing.T) {
+	testCases := []struct {
+		RequirePrefix bool
+		input         string
+		expectation   bool
+	}{
+		{true, "!foo", true},
+		{false, "!foo", true},
+		{true, "foo", false},
+		{false, "foo", true},
+	}
+	for _, testCase := range testCases {
+		prefix := "!"
+		var message Message
+		message.Text = testCase.input
+
+		result := checkPrefix(message, prefix, testCase.RequirePrefix)
+
+		if result != testCase.expectation {
+			t.Fatalf("\nGot: %t\nExpected: %t\n--with--\n%v\n",
+				result, testCase.expectation, testCase)
+		}
+	}
+}

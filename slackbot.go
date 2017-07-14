@@ -107,10 +107,10 @@ func generateHelpOutput() string {
 }
 
 // Check if prefix requirement is enabled, and check for the prefix if so.
-func CheckPrefix(message Message, prefix string) bool {
-	if RequirePrefix == false {
+func checkPrefix(message Message, prefix string, requirement bool) bool {
+	if requirement == false {
 		return true
-	} else if RequirePrefix == true && strings.HasPrefix(message.Text, prefix) {
+	} else if strings.HasPrefix(message.Text, prefix) {
 		return true
 	} else {
 		return false
@@ -154,7 +154,7 @@ func Stream() {
 
 		prefix := "<@" + BotIdentifier + "> "
 
-		if message.Type == "message" && CheckPrefix(message, prefix) == true {
+		if message.Type == "message" && checkPrefix(message, prefix, RequirePrefix) == true {
 			go func(commands []Command, message Message) {
 				message.Text = strings.Replace(message.Text, prefix, "", -1)
 				for _, command := range commands {
