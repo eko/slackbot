@@ -100,7 +100,7 @@ func check_error(err error) {
 func generateHelpOutput() string {
 	helpString := ""
 	for _, command := range commands {
-		helpString = fmt.Sprintf("%s%s: %s", helpString, command.Name, command.Description)
+		helpString = fmt.Sprintf("%s`%s`: %s\n", helpString, command.Name, command.Description)
 	}
 	return helpString
 }
