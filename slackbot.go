@@ -138,6 +138,7 @@ func Stream() {
 		var message Message
 		err := websocket.JSON.Receive(WebsocketStream, &message)
 		check_error(err)
+		fmt.Println(generateHelpOutput())
 
 		prefix := "<@" + BotIdentifier + "> "
 
