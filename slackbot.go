@@ -24,6 +24,7 @@ var (
 	BotIdentifier   string
 	MessageCounter  uint64
 	commands        []Command
+	RequirePrefix   bool
 )
 
 type RtmJsonResponse struct {
@@ -105,6 +106,14 @@ func generateHelpOutput() string {
 	return helpString
 }
 
+func doIRequirePrefix() bool {
+	if RequirePrefix == true {
+		return true
+	} else {
+		return false
+	}
+}
+
 // Init function initializes the Slack websocket.
 func Init() {
 	url := fmt.Sprintf("https://slack.com/api/rtm.start?token=%s", Token)
@@ -142,7 +151,7 @@ func Stream() {
 
 		prefix := "<@" + BotIdentifier + "> "
 
-		if message.Type == "message" && strings.HasPrefix(message.Text, prefix) {
+		if message.Type == "message" && doIRequirePrefix() {
 			go func(commands []Command, message Message) {
 				message.Text = strings.Replace(message.Text, prefix, "", -1)
 
