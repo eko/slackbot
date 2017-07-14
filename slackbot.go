@@ -143,11 +143,11 @@ func Init() {
 // Stream function listens for the websocket for new messages.
 func Stream() {
 	fmt.Println("Bot is ready, hit ^C to exit.")
+	fmt.Println(generateHelpOutput())
 	for {
 		var message Message
 		err := websocket.JSON.Receive(WebsocketStream, &message)
 		check_error(err)
-		fmt.Println(generateHelpOutput())
 
 		prefix := "<@" + BotIdentifier + "> "
 
