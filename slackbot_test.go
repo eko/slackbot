@@ -23,8 +23,8 @@ func TestAddCommand(t *testing.T) {
 		t.Error("Should have 0 commands by default")
 	}
 
-	AddCommand("test-a", func(command Command, message Message) {})
-	AddCommand("test-b", func(command Command, message Message) {})
+	AddCommand("test-a", "a", "test a", func(command Command, message Message) {})
+	AddCommand("test-b", "b", "test b", func(command Command, message Message) {})
 
 	if len(commands) != 2 {
 		t.Error("Should have 2 commands added")
