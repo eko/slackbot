@@ -24,7 +24,7 @@ var (
 	BotIdentifier   string
 	MessageCounter  uint64
 	commands        []Command
-	RequirePrefix   bool
+	RequirePrefix   bool = true
 )
 
 type RtmJsonResponse struct {
