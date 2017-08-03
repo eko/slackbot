@@ -31,6 +31,7 @@ func TestAddCommand(t *testing.T) {
 	}
 }
 
+// Tests that the check prefix flag works
 func TestCheckPrefix(t *testing.T) {
 	testCases := []struct {
 		RequirePrefix bool
