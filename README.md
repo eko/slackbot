@@ -8,7 +8,7 @@ This is a Slack Robot written in Go.
 
 ## Robot creation
 
-1. Go on the following uri to declare your new bot: https://<team>.slack.com/services/new/bot
+1. Go on the following uri to declare your new bot: https://{team}.slack.com/services/new/bot
 
 2. Retrieve the given token.
 
@@ -44,13 +44,14 @@ func main() {
 	slackbot.Token = "<your-bot-token>"
 	slackbot.Init()
 
-    slackbot.AddCommand("^hello (.*)", func(command slackbot.Command, message slackbot.Message) {
+    slackbot.AddCommand("^hello (.*)", "hello", "Responds hello {string}", 
+        func(command slackbot.Command, message slackbot.Message) {
 		name := command.Pattern.FindStringSubmatch(message.Text)[1]
 		message.Text = string(fmt.Sprintf("hello, %s!", name))
-
+		
 		slackbot.Respond(message)
 	})
-
+	
     slackbot.Stream()
 }
 ```

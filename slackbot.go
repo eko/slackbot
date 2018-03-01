@@ -24,6 +24,7 @@ var (
 	BotIdentifier   string
 	MessageCounter  uint64
 	commands        []Command
+	RequirePrefix   bool = true
 )
 
 type RtmJsonResponse struct {
@@ -84,13 +85,35 @@ type UsersJsonResponse struct {
 type handler func(pattern Command, message Message)
 
 type Command struct {
-	Pattern *regexp.Regexp
-	Handler handler
+	Pattern     *regexp.Regexp
+	Name        string
+	Description string
+	Handler     handler
 }
 
 func check_error(err error) {
 	if err != nil {
 		panic(err)
+	}
+}
+
+// Returns a string containing a pretty list of commands using the Name and Description fields in the Command struct
+func generateHelpOutput() string {
+	helpString := ""
+	for _, command := range commands {
+		helpString = fmt.Sprintf("`%s`: %s\n", command.Name, command.Description)
+	}
+	return helpString
+}
+
+// Check if prefix requirement is enabled, and check for the prefix if so.
+func checkPrefix(message Message, prefix string, requirement bool) bool {
+	if requirement == false {
+		return true
+	} else if strings.HasPrefix(message.Text, prefix) {
+		return true
+	} else {
+		return false
 	}
 }
 
@@ -123,7 +146,6 @@ func Init() {
 // Stream function listens for the websocket for new messages.
 func Stream() {
 	fmt.Println("Bot is ready, hit ^C to exit.")
-
 	for {
 		var message Message
 		err := websocket.JSON.Receive(WebsocketStream, &message)
@@ -131,15 +153,17 @@ func Stream() {
 
 		prefix := "<@" + BotIdentifier + "> "
 
-		if message.Type == "message" && strings.HasPrefix(message.Text, prefix) {
+		if message.Type == "message" && checkPrefix(message, prefix, RequirePrefix) == true {
 			go func(commands []Command, message Message) {
 				message.Text = strings.Replace(message.Text, prefix, "", -1)
-
 				for _, command := range commands {
 					if m, _ := regexp.MatchString(command.Pattern.String(), message.Text); m {
 						fmt.Printf("-> Command: %s\n", message.Text)
 						command.Handler(command, message)
-						break
+					} else if m, _ := regexp.MatchString("^help", message.Text); m {
+						fmt.Printf("-> Command: %s\n", message.Text)
+						message.Text = generateHelpOutput()
+						Respond(message)
 					}
 				}
 			}(commands, message)
@@ -148,8 +172,8 @@ func Stream() {
 }
 
 // AddCommand function adds a new command into the commands list.
-func AddCommand(pattern string, handler handler) {
-	commands = append(commands, Command{Pattern: regexp.MustCompile(pattern), Handler: handler})
+func AddCommand(pattern string, name string, description string, handler handler) {
+	commands = append(commands, Command{Pattern: regexp.MustCompile(pattern), Name: name, Description: description, Handler: handler})
 }
 
 // Respond function sends a message back into the websocket stream.
