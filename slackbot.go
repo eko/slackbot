@@ -44,6 +44,23 @@ type Channel struct {
 	ReturnIM bool   `json:"return_im"`
 }
 
+type MPInstantMessage struct {
+	Users    string `json:"users"`
+	Token    string `json:"token"`
+	ReturnIM bool   `json:"return_im"`
+}
+
+type MPInstantMessageJsonResponse struct {
+	Ok    bool              `json:"ok"`
+	Error string            `json:"error"`
+	Group GroupJsonResponse `json:"group"`
+}
+
+type GroupJsonResponse struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type Message struct {
 	ID      uint64 `json:"id"`
 	Type    string `json:"type"`
@@ -196,6 +213,35 @@ func OpenIM(channel Channel) (IMJsonResponse, error) {
 
 	if response.StatusCode != 200 {
 		return jsonResponse, fmt.Errorf("Unable to open an instant message. Code status: %d", response.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(response.Body)
+	response.Body.Close()
+	check_error(err)
+
+	err = json.Unmarshal(body, &jsonResponse)
+	check_error(err)
+
+	fmt.Printf("%s", jsonResponse.Error)
+
+	return jsonResponse, nil
+}
+
+// Opens a multi-pluriparty instant message window
+func OpenMPIM(instantMessage MPInstantMessage) (MPInstantMessageJsonResponse, error) {
+	var jsonResponse MPInstantMessageJsonResponse
+
+	data := url.Values{}
+	data.Set("token", Token)
+	data.Add("users", instantMessage.Users)
+
+	url := "https://slack.com/api/mpim.open"
+
+	response, err := http.Post(url, "application/x-www-form-urlencoded", bytes.NewBufferString(data.Encode()))
+	check_error(err)
+
+	if response.StatusCode != 200 {
+		return jsonResponse, fmt.Errorf("Unable to open a grouped conversation. Code status: %d", response.StatusCode)
 	}
 
 	body, err := ioutil.ReadAll(response.Body)
